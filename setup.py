@@ -1,6 +1,5 @@
 from glob import glob
-from os.path import basename
-from os.path import splitext
+from os.path import basename, splitext
 
 import setuptools
 

@@ -1,28 +1,31 @@
 import unittest
+import tempfile
 
 from configstore.config_store import ConfigStore
 
 
-class TestAuditLogger(unittest.TestCase):
+class TestConfStore(unittest.TestCase):
     def setUp(self):
-        self.conf_store = ConfigStore()
+        self.test_dir = tempfile.TemporaryDirectory()
+        self.conf_store = ConfigStore(self.test_dir.name)
 
     def tearDown(self):
-        pass
+        self.test_dir.cleanup()
 
     def test_print_repo_details(self):
         try:
-            self.conf_store.print_repo_details()
+            print(self.conf_store)
         except Exception:
-            self.fail("print_repo() raised ExceptionType unexpectedly!")
+            self.fail("__str__() raised Exception unexpectedly!")
 
     def test_print_changes_log(self):
+        self.conf_store.store_conf("user_a", "device_1337", "configuration")
         try:
             self.conf_store.print_changes_log(4)
         except Exception:
-            self.fail("print_commits(1) raised ExceptionType unexpectedly!")
+            self.fail("print_commits(1) raised Exception unexpectedly!")
 
-    def test_do_not_allow_empty_device_name(self):
+    def test_store_conf_do_not_allow_empty_device_name(self):
         self.assertRaises(
             TypeError,
             lambda: self.conf_store.store_conf("UserEmpty", "", "conf content")

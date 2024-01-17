@@ -5,43 +5,57 @@ from typing import Optional
 from git import Repo, InvalidGitRepositoryError, NoSuchPathError
 
 from configstore.exceptions import InitError
+from configstore.log import get_logger
 
-# default_repo_dir = "/var/local/clixon-log"
-default_repo_dir = "/home/johannes/code/configuration-store/.log"
+default_repo_dir = "/var/local/clixon-log"
 
 
 class ConfigStore():
     def __init__(self, repo_dir: Optional[str] = default_repo_dir):
-        """
-        Create a ConfigStore object
-        """
+        """Create a ConfigStore object."""
         self.__repo_dir = repo_dir
+        self.__log = get_logger()
         self.__repo = self._load_or_init_repo(repo_dir)
 
         if (self.__repo.__class__ is Repo and not self.__repo.bare):
-            print("Repo at {} successfully loaded.".format(repo_dir))
+            self.__log.info(
+                "Repo successfully attached at {}.".format(repo_dir))
         else:
-            print("Could not load nor init repository at {}".format(repo_dir))
+            self.__log.error(
+                "Could not load nor init repository at {}".format(repo_dir))
             raise InitError("Failed to load or initialize repository at {}."
                             .format(repo_dir))
 
     def _load_or_init_repo(self, repo_dir):
-        """
-        Creates repo object from repo_dir. Creates the git repository if it
-        does not exist already.
+        """Tries to load repo object from repo_dir. Tries to initialize repo if
+        loading fails.
         """
         try:
             return Repo(repo_dir)
         except (InvalidGitRepositoryError, NoSuchPathError):
+            self.__log.info(
+                "Failed to load repo at {}. Trying to initialize new repo"
+                .format(repo_dir))
             r = Repo.init(join(repo_dir))
             r.description = "Configuration store log repository"
             r.index.commit("Init Configuration store")
             return r
 
+    def __str__(self):
+        return ("{{\n"
+                "  \"description\": \"{}\"\n".format(self.__repo.description) +
+                "  \"branch\": \"{}\"\n".format(self.__repo.active_branch) +
+                "  \"path\": \"{}\"\n".format(self.__repo.working_tree_dir) +
+                "  \"latest\": {\n" +
+                "    \"sha\": \"{}\"\n".format(
+                    str(self.__repo.head.commit.hexsha)) +
+                "    \"timestamp\": \"{}\"\n".format(
+                    str(self.__repo.head.commit.authored_datetime)) +
+                "  }\n" +
+                "}")
+
     def print_changes_log(self, count):
-        """
-        Print diff information between subsequent commits.
-        """
+        """Print diff information between subsequent commits."""
         commits = list(self.__repo.iter_commits("main"))
 
         for commit in commits:
@@ -58,8 +72,7 @@ class ConfigStore():
             print()
 
     def _get_diff(self, commit, commit_parent):
-        """
-        Output diff on modified files only.
+        """Output diff on modified files only.
 
         :return:
             Tuple of lists with modified_files, added_files, deleted_files.
@@ -94,23 +107,8 @@ class ConfigStore():
 
         return modified_files, added_files, deleted_files
 
-    def print_repo_details(self):
-        print(
-            "{\n" +
-            "  \"description\": \"{}\"\n".format(self.__repo.description) +
-            "  \"branch\": \"{}\"\n".format(self.__repo.active_branch) +
-            "  \"path\": \"{}\"\n".format(self.__repo.working_tree_dir) +
-            "  \"latest\": {\n" +
-            "    \"sha\": \"{}\"\n".format(
-                str(self.__repo.head.commit.hexsha)) +
-            "    \"timestamp\": \"{}\"\n".format(
-                str(self.__repo.head.commit.authored_datetime)) +
-            "  }\n" +
-            "}")
-
     def store_conf(self, user, device_name, conf):
-        """
-        Store :conf: as content of file names :device_name: to disk.
+        """Store :conf: as content of file names :device_name: to disk.
 
         :param user:
         :param device_name:
@@ -134,6 +132,8 @@ class ConfigStore():
 
     def get_conf(self, device_name):
         absolute_file_name = self._get_file_path(device_name)
+        self.__log.info(
+            "Get confoguration from file {}".format(absolute_file_name))
         with open(absolute_file_name, "r+") as device_file:
             conf = device_file.read()
 

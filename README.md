@@ -19,5 +19,5 @@ pytest
 ## TODO
 
 - `store_conf` should handle lists of `device_name` mapping to multiple files
-- use [logging](https://docs.python.org/3/library/logging.html)
 - "rollback" functionality
+- permission to write to _/var/local/_

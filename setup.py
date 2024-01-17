@@ -7,11 +7,11 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="augitlog",
+    name="confstore",
     version="0.0.1",
     author="Kristofer Hallin, Johannes Jeppsson",
     author_email="clixon-pyapi@8n1.se",
-    description="Audit log through git",
+    description="Config store through git",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/SUNET/configuration-store",

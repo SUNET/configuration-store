@@ -130,8 +130,13 @@ class ConfigStore():
                 .format(user, device_name))
 
     def get_latest_change(self):
+        """
+        Returns latest change as a list of 2-tuples containing
+        (device_name, config).
+        """
         latest_tree = self.__repo.head.commit.tree
-        return [changes.data_stream.read().decode() for changes in latest_tree]
+        return [(changes.path, changes.data_stream.read().decode())
+                for changes in latest_tree]
 
     def get_conf(self, device_name):
         absolute_file_name = self._get_file_path(device_name)

@@ -48,12 +48,15 @@ class TestConfigStore(unittest.TestCase):
                 ("dev_3", "conf dev 3"),
             ])
 
+        print(self.config_store.get_latest_change())
         self.assertEqual(self.config_store.get_conf("dev_1"), "conf dev 1")
         self.assertEqual(self.config_store.get_conf("dev_2"), "conf dev 2")
         self.assertEqual(self.config_store.get_conf("dev_3"), "conf dev 3")
         self.assertEqual(
             self.config_store.get_latest_change(),
-            ["conf dev 1", "conf dev 2", "conf dev 3"])
+            [("dev_1", "conf dev 1"),
+             ("dev_2", "conf dev 2"),
+             ("dev_3", "conf dev 3")])
 
     def test_get_conf_history(self):
         conf_1 = "conf 666\n1\n"

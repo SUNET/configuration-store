@@ -139,5 +139,14 @@ class ConfigStore():
 
         return conf
 
+    def get_conf_history(self, device_name):
+        """Get history of full config file for :device_name:"""
+        commits_for_file = list(
+            self.__repo.iter_commits(all=True, paths=device_name))
+        confs = []
+        for commits in commits_for_file:
+            confs.append(commits.tree[device_name].data_stream.read().decode())
+        return confs
+
     def _get_file_path(self, device_name):
         return join(self.__repo_dir, device_name)

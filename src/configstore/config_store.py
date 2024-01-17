@@ -107,28 +107,31 @@ class ConfigStore():
 
         return modified_files, added_files, deleted_files
 
-    def store_conf(self, user, device_name, conf):
-        """Store :conf: as content of file names :device_name: to disk.
+    def store_conf(self, user, conf_per_device):
+        """Store as content of file names device_name to disk.
 
         :param user:
-        :param device_name:
-            Device name will be used as file name to commit changes to.
-        :conf:
-            Content string to write to file.
+        :param conf_per_device:
+            list of 2-tuples with (device_name and conf)
+            device_name will be used as file name and conf will be content of
+            file.
         """
-        # TODO: should handle multiple device_names and correlating confs
+        for (device_name, conf) in conf_per_device:
+            if len(device_name) == 0:
+                raise TypeError("device_name must not be empty")
 
-        if len(device_name) == 0:
-            raise TypeError("device_name must not be empty")
+            absolute_file_name = self._get_file_path(device_name)
+            with open(absolute_file_name, "w") as device_file:
+                device_file.write(conf)
 
-        absolute_file_name = self._get_file_path(device_name)
-        with open(absolute_file_name, "w") as device_file:
-            device_file.write(conf)
+            self.__repo.index.add([absolute_file_name])
+            self.__repo.index.commit(
+                "{{\"user\": \"{}\", \"device\": \"{}\"}}"
+                .format(user, device_name))
 
-        self.__repo.index.add([absolute_file_name])
-        self.__repo.index.commit(
-            "{{\"user\": \"{}\", \"device\": \"{}\"}}"
-            .format(user, device_name))
+    def get_latest_change(self):
+        latest_tree = self.__repo.head.commit.tree
+        return [changes.data_stream.read().decode() for changes in latest_tree]
 
     def get_conf(self, device_name):
         absolute_file_name = self._get_file_path(device_name)
@@ -144,8 +147,8 @@ class ConfigStore():
         commits_for_file = list(
             self.__repo.iter_commits(all=True, paths=device_name))
         confs = []
-        for commits in commits_for_file:
-            confs.append(commits.tree[device_name].data_stream.read().decode())
+        for commit in commits_for_file:
+            confs.append(commit.tree[device_name].data_stream.read().decode())
         return confs
 
     def _get_file_path(self, device_name):

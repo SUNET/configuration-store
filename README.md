@@ -20,3 +20,4 @@ pytest
 
 - "rollback" functionality
 - permission to write to _/var/local/_
+- use `commit.authored_date` for timestamps

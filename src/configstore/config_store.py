@@ -129,23 +129,19 @@ class ConfigStore():
                 "{{\"user\": \"{}\", \"device\": \"{}\"}}"
                 .format(user, device_name))
 
-    def get_latest_change(self):
+    def get_current_conf(self):
         """
         Returns latest change as a list of 2-tuples containing
         (device_name, config).
         """
         latest_tree = self.__repo.head.commit.tree
-        return [(changes.path, changes.data_stream.read().decode())
-                for changes in latest_tree]
+        return [(blobs.path, blobs.data_stream.read().decode())
+                for blobs in latest_tree]
 
-    def get_conf(self, device_name):
-        absolute_file_name = self._get_file_path(device_name)
-        self.__log.info(
-            "Get confoguration from file {}".format(absolute_file_name))
-        with open(absolute_file_name, "r+") as device_file:
-            conf = device_file.read()
-
-        return conf
+    def get_current_conf_for(self, device_name):
+        """Get device's latest conf from HEAD commit."""
+        latest_blob = self.__repo.head.commit.tree[device_name]
+        return latest_blob.data_stream.read().decode()
 
     def get_conf_history(self, device_name):
         """Get history of full config file for :device_name:"""

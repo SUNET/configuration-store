@@ -37,7 +37,7 @@ class TestConfigStore(unittest.TestCase):
             "user_a", [("device_1", "<a x=\"1\">\n</a>\n")])
         conf_b = "<a x=\"1\">\n<b y=\"2\"></b>\n</a>\n"
         self.config_store.store_conf("user_b", [("device_1", conf_b)])
-        conf = self.config_store.get_conf("device_1")
+        conf = self.config_store.get_current_conf_for("device_1")
         self.assertEqual(conf, conf_b)
 
     def test_store_conf_saves_multiple_devices_at_once(self):
@@ -48,12 +48,11 @@ class TestConfigStore(unittest.TestCase):
                 ("dev_3", "conf dev 3"),
             ])
 
-        print(self.config_store.get_latest_change())
-        self.assertEqual(self.config_store.get_conf("dev_1"), "conf dev 1")
-        self.assertEqual(self.config_store.get_conf("dev_2"), "conf dev 2")
-        self.assertEqual(self.config_store.get_conf("dev_3"), "conf dev 3")
+        self.assertEqual(self.config_store.get_current_conf_for("dev_1"), "conf dev 1")
+        self.assertEqual(self.config_store.get_current_conf_for("dev_2"), "conf dev 2")
+        self.assertEqual(self.config_store.get_current_conf_for("dev_3"), "conf dev 3")
         self.assertEqual(
-            self.config_store.get_latest_change(),
+            self.config_store.get_current_conf(),
             [("dev_1", "conf dev 1"),
              ("dev_2", "conf dev 2"),
              ("dev_3", "conf dev 3")])

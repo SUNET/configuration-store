@@ -96,11 +96,9 @@ class ConfigStore():
                     added_files.append(idx.a_path)
                 case "M":
                     # paths with modified data
-                    a_blob = idx.a_blob.data_stream.read().decode("utf-8")
-                    b_blob = idx.b_blob.data_stream.read().decode("utf-8")
                     diff = unified_diff(
-                        a_blob.splitlines(),
-                        b_blob.splitlines())
+                        _decode_file(idx.a_blob).splitlines(),
+                        _decode_file(idx.b_blob).splitlines())
                     modified_files.append((idx.a_path, diff))
                 case "D":
                     # deleted paths
@@ -141,13 +139,12 @@ class ConfigStore():
         file structure in the repo.
         """
         latest_tree = self.__repo.head.commit.tree
-        return [(blobs.path, blobs.data_stream.read().decode())
-                for blobs in latest_tree]
+        return [(blob.path, _decode_file(blob)) for blob in latest_tree]
 
     def get_current_conf_for(self, device_name):
         """Get device's current conf."""
         latest_blob = self.__repo.head.commit.tree[device_name]
-        return latest_blob.data_stream.read().decode()
+        return _decode_file(latest_blob)
 
     def get_conf_history(self, device_name):
         """Get history of full config file for :device_name:"""
@@ -155,8 +152,13 @@ class ConfigStore():
             all=True, paths=device_name)
         confs = []
         for commit in commits_for_file:
-            confs.append(commit.tree[device_name].data_stream.read().decode())
+            confs.append(_decode_file(commit.tree[device_name]))
         return confs
 
     def _get_file_path(self, device_name):
         return join(self.__repo_dir, device_name)
+
+
+def _decode_file(file):
+    """Decodes blobs in GitPython to string representation."""
+    return file.data_stream.read().decode("utf-8")

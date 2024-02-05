@@ -24,7 +24,7 @@ class TestConfigStore(unittest.TestCase):
         try:
             self.config_store.print_changes_log(4)
         except Exception:
-            self.fail("print_commits(1) raised Exception unexpectedly!")
+            self.fail("print_commits raised Exception unexpectedly!")
 
     def test_store_conf_do_not_allow_empty_device_name(self):
         self.assertRaises(
@@ -42,20 +42,20 @@ class TestConfigStore(unittest.TestCase):
 
     def test_store_conf_saves_multiple_devices_at_once(self):
         self.config_store.store_conf(
+            "simple_user", [
+                ("dev_90", "conf dev 90")])
+        self.config_store.store_conf(
             "advanced_user", [
                 ("dev_1", "conf dev 1"),
                 ("dev_2", "conf dev 2"),
-                ("dev_3", "conf dev 3"),
-            ])
+                ("dev_3", "conf dev 3")])
 
-        self.assertEqual(self.config_store.get_current_conf_for("dev_1"), "conf dev 1")
-        self.assertEqual(self.config_store.get_current_conf_for("dev_2"), "conf dev 2")
-        self.assertEqual(self.config_store.get_current_conf_for("dev_3"), "conf dev 3")
         self.assertEqual(
             self.config_store.get_current_conf(),
             [("dev_1", "conf dev 1"),
              ("dev_2", "conf dev 2"),
-             ("dev_3", "conf dev 3")])
+             ("dev_3", "conf dev 3"),
+             ("dev_90", "conf dev 90")])
 
     def test_get_conf_history(self):
         conf_1 = "conf 666\n1\n"

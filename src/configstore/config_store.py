@@ -56,15 +56,18 @@ class ConfigStore():
 
     def print_changes_log(self, count):
         """Print diff information between subsequent commits."""
-        commits = list(self.__repo.iter_commits("main"))
+        commits_count = self.__repo.tree().size
+        if count > commits_count:
+            count = commits_count
 
+        commits = list(self.__repo.iter_commits("main", max_count=count))
         for commit in commits:
-            print("--{}--".format(str(commit.authored_datetime)))
+            print("\n--{}--".format(str(commit.authored_datetime)))
             print("\"{}\"".format(commit.summary))
-            print("\"{}\"".format(commit.hexsha))
+            print("\"SHA {}\"".format(commit.hexsha))
             modified, added, deleted = self._get_diff(commit, commit.parents)
             for file, diff in modified:
-                print("modified_files: {}\n {}".format(file, "\n".join(diff)))
+                print("modified_files: {}\n{}".format(file, "\n".join(diff)))
             for file in added:
                 print("added files: {}".format(added))
             for file in deleted:
@@ -80,30 +83,31 @@ class ConfigStore():
         """
         if len(commit_parent) == 0:
             return [], [], []
-
         diff_index = commit_parent[0].diff(commit)
 
-        #  iter_change_type: "M" - paths with modified data
-        modified_files = []
-        for file in diff_index.iter_change_type("M"):
-            a_blob = file.a_blob.data_stream.read().decode("utf-8")
-            b_blob = file.b_blob.data_stream.read().decode("utf-8")
-            modified_files.append(
-                (
-                    file.a_path,
-                    unified_diff(a_blob.splitlines(), b_blob.splitlines())
-                )
-            )
-
-        #  iter_change_type: "A" - added paths
         added_files = []
-        for file in diff_index.iter_change_type("A"):
-            added_files.append(file.a_path)
-
-        #  iter_change_type: "D" - deleted paths
         deleted_files = []
-        for file in diff_index.iter_change_type("D"):
-            deleted_files.append(file.a_path)
+        modified_files = []
+
+        for idx in diff_index:
+            match idx.change_type:
+                case "A":
+                    # added paths
+                    added_files.append(idx.a_path)
+                case "M":
+                    # paths with modified data
+                    a_blob = idx.a_blob.data_stream.read().decode("utf-8")
+                    b_blob = idx.b_blob.data_stream.read().decode("utf-8")
+                    diff = unified_diff(
+                        a_blob.splitlines(),
+                        b_blob.splitlines())
+                    modified_files.append((idx.a_path, diff))
+                case "D":
+                    # deleted paths
+                    deleted_files.append(idx.a_path)
+                case "_":
+                    print("TODO: support change_type == {}"
+                          .format(idx.change_type))
 
         return modified_files, added_files, deleted_files
 
@@ -131,22 +135,24 @@ class ConfigStore():
 
     def get_current_conf(self):
         """
-        Returns latest change as a list of 2-tuples containing
-        (device_name, config).
+        Get current conf as a list of 2-tuples containing (device_name, config)
+
+        Note that device_name is the same as path since we assume a flat
+        file structure in the repo.
         """
         latest_tree = self.__repo.head.commit.tree
         return [(blobs.path, blobs.data_stream.read().decode())
                 for blobs in latest_tree]
 
     def get_current_conf_for(self, device_name):
-        """Get device's latest conf from HEAD commit."""
+        """Get device's current conf."""
         latest_blob = self.__repo.head.commit.tree[device_name]
         return latest_blob.data_stream.read().decode()
 
     def get_conf_history(self, device_name):
         """Get history of full config file for :device_name:"""
-        commits_for_file = list(
-            self.__repo.iter_commits(all=True, paths=device_name))
+        commits_for_file = self.__repo.iter_commits(
+            all=True, paths=device_name)
         confs = []
         for commit in commits_for_file:
             confs.append(commit.tree[device_name].data_stream.read().decode())

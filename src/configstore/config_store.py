@@ -60,7 +60,8 @@ class ConfigStore():
         if count > commits_count:
             count = commits_count
 
-        commits = list(self.__repo.iter_commits("main", max_count=count))
+        commits = list(self.__repo.iter_commits(
+            self.__repo.active_branch, max_count=count))
         for commit in commits:
             print("\n--{}--".format(str(commit.authored_datetime)))
             print("\"{}\"".format(commit.summary))
@@ -103,7 +104,7 @@ class ConfigStore():
                 case "D":
                     # deleted paths
                     deleted_files.append(idx.a_path)
-                case "_":
+                case _:
                     print("TODO: support change_type == {}"
                           .format(idx.change_type))
 

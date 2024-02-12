@@ -1,5 +1,6 @@
-from configstore.log import get_logger
 import logging
+
+from confstore.util.log import get_logger
 
 
 def test_get_log_with_default_values(caplog):

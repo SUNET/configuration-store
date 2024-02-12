@@ -1,7 +1,7 @@
 import unittest
 import tempfile
 
-from configstore.config_store import ConfigStore
+from confstore.server.config_store import ConfigStore
 
 
 class TestConfigStore(unittest.TestCase):

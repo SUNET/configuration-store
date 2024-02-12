@@ -1,11 +1,11 @@
 from os.path import join
 from difflib import unified_diff
-
 from typing import Optional
+
 from git import Repo, InvalidGitRepositoryError, NoSuchPathError
 
-from configstore.exceptions import InitError
-from configstore.log import get_logger
+from .exceptions import InitError
+from confstore.util.log import get_logger
 
 default_repo_dir = "/var/local/clixon-log"
 

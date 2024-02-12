@@ -11,9 +11,11 @@ def get_logger(stdout: Optional[bool] = False,
                debug: Optional[bool] = False) -> logging.Logger:
     """Get logger.
 
-    :output: s generates SysLogHandler, otherwise StreamHandler
+    :stdout: s generates SysLogHandler, otherwise StreamHandler
     :debug: set debug
     """
+    print("I'm in get_logger")
+    print(f"args: stdout={stdout}, debug={debug}")
 
     logger = logging.getLogger(LOGGER_NAME)
     if not logger.handlers:
